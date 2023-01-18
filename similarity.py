@@ -6,15 +6,10 @@ from sklearn.metrics.pairwise import linear_kernel
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.metrics.pairwise import cosine_similarity
 
-
-def mean_pooling(model_output, attention_mask):
-    token_embeddings = model_output[0] #First element of model_output contains all token embeddings
-    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-    return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+from model import mean_pooling
 
 
 def content_based_filtering_euclidean(content_id_list, embedding_matrix, sentence, tokenizer, model, topn):
-    topn=11 if topn is None else topn+1
     encoded_input = tokenizer(sentence, padding = True, truncation = True, return_tensors = 'pt')
     
     with torch.no_grad():
@@ -28,7 +23,6 @@ def content_based_filtering_euclidean(content_id_list, embedding_matrix, sentenc
     
 
 def content_based_filtering_cosine(content_id_list, embedding_matrix, sentence, tokenizer, model, topn):
-    topn=11 if topn is None else topn+1
     encoded_input = tokenizer(sentence, padding = True, truncation = True, return_tensors = 'pt')
     with torch.no_grad():
         output = model(**encoded_input)
@@ -41,7 +35,6 @@ def content_based_filtering_cosine(content_id_list, embedding_matrix, sentence, 
 
 
 def content_based_filtering_jaccard(content_id_list, token_set_dict, sentence, tokenizer, topn):
-    topn=11 if topn is None else topn+1
     encoded_input = tokenizer(sentence, padding = True, truncation = True, return_tensors = 'pt')
     sentence_tokens = set(encoded_input['input_ids'].squeeze().numpy())
     result = []
