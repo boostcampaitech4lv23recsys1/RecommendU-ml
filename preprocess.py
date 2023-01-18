@@ -3,7 +3,15 @@ import pandas as pd
 import random
 from transformers import AutoTokenizer, AutoModel, AutoModelForSeq2SeqLM, pipeline, Pipeline
 
-class RecommendTag():
+from similarity import content_based_filtering_euclidean
+
+class RecommendModel:
+    sim_model_name = "jhgan/ko-sroberta-multitask"
+    sim_tokenizer = AutoTokenizer.from_pretrained(sim_model_name)
+    sim_model = AutoModel.from_pretrained(sim_model_name)
+
+
+class RecommendTag(RecommendModel):
     def __init__(self, document, jobkorea, qcate_dict, matrix, question_category, company, 
                  favorite_company, job_large, answer, topk):
         #data
@@ -36,12 +44,32 @@ class RecommendTag():
         tag1 = self.jobkorea[(self.jobkorea["answer_id"].isin(self.fquestion)) 
                              & (self.jobkorea["doc_id"].isin(self.fcompany))
                              & (self.jobkorea["doc_id"].isin(self.job_large))]
+        if self.answer:
+            tag1 = content_based_filtering_euclidean(np.array(tag1["answer_id"]), self.matrix[tag1["answer_id"]], self.answer,
+                                   super().sim_tokenizer, super().sim_model, self.topk-1)
+            return list(tag1)
+        else:
+            temp = list(tag1.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:30]
+            if len(temp) >= self.topk:
+                return random.sample(temp, self.topk)
+            else:
+                return temp
     
     #Tag 2 : 질문 O / 회사 x / 직무 O
     def gettag2(self):
         tag2 = self.jobkorea[(self.jobkorea["answer_id"].isin(self.fquestion)) 
                              & (self.jobkorea["doc_id"].isin(self.job_large))]
         
+        if self.answer:
+            tag2 = content_based_filtering_euclidean(np.array(tag2["answer_id"]), self.matrix[tag2["answer_id"]], self.answer,
+                                   super().sim_tokenizer, super().sim_model, self.topk-1)
+            return list(tag2)
+        else:
+            temp = list(tag2.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:30]
+            if len(temp) >= self.topk:
+                return random.sample(temp, self.topk)
+            else:
+                return temp
         
     
     #Tag 3 : 질문 O / 회사 O / 직무 X
@@ -49,6 +77,16 @@ class RecommendTag():
         tag3 = self.jobkorea[(self.jobkorea["answer_id"].isin(self.fquestion)) 
                              & (self.jobkorea["doc_id"].isin(self.fcompany))]
         
+        if self.answer:
+            tag3 = content_based_filtering_euclidean(np.array(tag3["answer_id"]), self.matrix[tag3["answer_id"]], self.answer,
+                                   super().sim_tokenizer, super().sim_model, self.topk-1)
+            return list(tag3)
+        else:
+            temp = list(tag3.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:30]
+            if len(temp) >= self.topk:
+                return random.sample(temp, self.topk)
+            else:
+                return temp
     
     #Tag 4 : popularity
     def gettag4(self):

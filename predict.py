@@ -43,6 +43,16 @@ def main(args):
     
     print("data loader time : ", time.time()-start1)
 
+    start2 = time.time()
+    rectag = RecommendTag(document, jobkorea, qcate_dict, matrix, example_user1["question_category"], example_user1["company"], 
+                example_user1["favorite_company"], example_user1["job_large"], example_user1["answer"], args.topk)
+    
+    rectag.filtering()
+
+    result = {"tag1" : rectag.gettag1(),"tag2" : rectag.gettag2(),"tag3" : rectag.gettag3(),"tag4" : rectag.gettag4(),"tag5" : rectag.gettag5()}
+    print(result)
+    print("recommend time : ", time.time()-start2)
+
 
 if __name__ == '__main__':
     args = parse_args()
