@@ -45,18 +45,21 @@ def main(args):
     sample_answer = f.read()
 
     # company o, answer o
-    example_user1 = {"question_category" : 6, "company": "롯데IT테크(주)", "favorite_company":"네이버(주)", "job_small":"응용프로그래머", "answer":sample_answer}
+    example_user1 = {"question_category" : 6, "company": "교보생명", "favorite_company":"네이버(주)", "job_small":"응용프로그래머", "answer":sample_answer}
     # company x, answer o
     example_user2 = {"question_category" : 6, "company": "", "favorite_company":"네이버(주)", "job_small":"응용프로그래머", "answer":sample_answer}
     # company o, answer x
     example_user3 = {"question_category" : 6, "company": "롯데IT테크(주)", "favorite_company":"네이버(주)", "job_small":"응용프로그래머", "answer":""}
     example_user4 = {"question_category" : 6, "company": "㈜KB데이타시스템", "favorite_company":"네이버(주)", "job_small":"경리·회계·결산", "answer":""}
     example_user5 = {"question_category" : 10, "company": "(주)카카오", "favorite_company":"네이버(주)", "job_small":"경리·회계·결산", "answer":""}
-    
+    example_user6 = {"question_category" : 8, "company": "(주)카카오", "favorite_company":"네이버(주)", "job_small":"경리·회계·결산", "answer":""}
+    # (학)연세대학교연세의료원
+    example_user = {"question_category" : 7, "company": "SK하이닉스(주)", "favorite_company":"네이버(주)", "job_large":"IT·인터넷", 
+    "answer":"최근 **전자 설명회를 통해 만나 뵈었던 VC사업본부 담당 리크루터께서는 **전자 VC사업본부는 최근 신설되었지만 기존부터 관련 연구가 진행되어 왔으며 회사가 가지고 있는 지능형 자동차 부품에 대한 기술경쟁력은 세계적 수준이라 하셨고 VC사업본부의 경쟁사는 국내의 자동차 부품업체가 아닌 보쉬와 컨티넨탈과 같은 세계적인 부품업체라는 점과 **그룹 계열사들이 가지고 있는 다양한 기술력을 통해 계열사의 협업을 바탕으로 성장 가능성 또한 무궁무진 하다는 이야기를 하셨습니다."}
     print("data loader time : ", time.time()-start1)
     
     print("[DEBUG]")
-    question_category, company, favorite_company, job_small, answer = example_user5.values()
+    question_category, company, favorite_company, job_small, answer = example_user.values()
 
     start2 = time.time()
     recommend = Recommendation(document, item, qcate_dict, answer_emb_matrix, embedder, 
@@ -74,6 +77,7 @@ def main(args):
             }
 
     print("=======태그별 추천 결과(answer_id)========")
+    print(example_user)
     print(result)
     print("recommend time : ", time.time()-start2)
 

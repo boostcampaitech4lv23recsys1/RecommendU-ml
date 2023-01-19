@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 import pandas as pd
 import random
@@ -35,7 +36,7 @@ class FeatureExtractor:
 
 class Recommendation:
     def __init__(self, document, item, qcate_dict, matrix, embedder, question_category, company, 
-                 favorite_company, job_small, answer, topk):
+                 favorite_company, job_large, answer, topk):
         
         #data
         self.document = document
@@ -49,7 +50,7 @@ class Recommendation:
         #user information
         self.question_category = str(question_category)
         self.company = company if company else favorite_company
-        self.job_small = job_small
+        self.job_large = job_large
         self.answer = None if len(answer) == 0 else answer
         
         #setting
@@ -64,25 +65,30 @@ class Recommendation:
     def filtering(self):
         self.fquestion = self.qcate_dict[self.question_category] #질문 필터링
         self.fcompany = list(self.document[self.document["company"] == self.company]["doc_id"])
-        self.job_small = list(self.document[self.document["job_small"] == self.job_small]["doc_id"])
+        self.job_large = list(self.document[self.document["job_large"] == self.job_large]["doc_id"])
 
     
     def recommend_with_company_jobtype(self):
         """
         Tag 1 : 질문 O / 회사 O / 직무 O
         """
-        tag1 = self.item[(self.item["answer_id"].isin(self.fquestion)) 
-                             & (self.item["doc_id"].isin(self.fcompany))
-                             & (self.item["doc_id"].isin(self.job_small))]
-        # testing = pd.merge(tag1, self.document, how = 'left', on = 'doc_id')
-        # print(testing)
-        print(f"[TAG1 SHAPE]: {tag1.shape}")
+        # tag1 = self.item[(self.item["answer_id"].isin(self.fquestion)) 
+        #                      & (self.item["doc_id"].isin(self.fcompany))
+        #                      & (self.item["doc_id"].isin(self.job_large))]
+
+        tag1 = self.item.copy()
+        tag1['weight_score'] = np.zeros(len(self.item))
+        tag1['weight_score'] += np.where(self.item['answer_id'].isin(self.fquestion), 2, 0)
+        tag1['weight_score'] += np.where(self.item['doc_id'].isin(self.fcompany), 1, 0)
+        tag1['weight_score'] += np.where(self.item['doc_id'].isin(self.job_large), 1, 0)
+        tag1 = tag1.sort_values(by = 'weight_score', ascending = False).iloc[:10]
+    
         if self.answer != None:
             tag1 = content_based_filtering_cosine(np.array(tag1["answer_id"]), self.matrix[tag1["answer_id"]], self.answer,
                                    self.embedder, self.topk)
             return list(tag1)
         else:
-            temp = list(tag1.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:30]
+            temp = list(tag1.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:10]
             if len(temp) >= self.topk:
                 return random.sample(temp, self.topk)
             else:
@@ -93,16 +99,19 @@ class Recommendation:
         """
         Tag 2 : 질문 O / 회사 x / 직무 O
         """
-        tag2 = self.item[(self.item["answer_id"].isin(self.fquestion)) 
-                             & (self.item["doc_id"].isin(self.job_small))]
         
-        print(f"[TAG2 recommend_with_jobtype_without_company]: {tag2.shape}")
+        tag2 = self.item.copy()
+        tag2['weight_score'] = np.zeros(len(self.item))
+        tag2['weight_score'] += np.where(self.item['answer_id'].isin(self.fquestion), 2, 0)
+        tag2['weight_score'] += np.where(self.item['doc_id'].isin(self.job_large), 1, 0)
+        tag2 = tag2.sort_values(by = 'weight_score', ascending = False).iloc[:10]
+        
         if self.answer != None:
             tag2 = content_based_filtering_cosine(np.array(tag2["answer_id"]), self.matrix[tag2["answer_id"]], self.answer,
                                    self.embedder, self.topk)
             return list(tag2)
         else:
-            temp = list(tag2.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:30]
+            temp = list(tag2.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:10]
             if len(temp) >= self.topk:
                 return random.sample(temp, self.topk)
             else:
@@ -114,15 +123,18 @@ class Recommendation:
         """
         Tag 3 : 질문 O / 회사 O / 직무 X
         """
-        tag3 = self.item[(self.item["answer_id"].isin(self.fquestion)) 
-                             & (self.item["doc_id"].isin(self.fcompany))]
-        print(f"[TAG3 recommend_with_company_without_jobtype]: {tag3.shape}")
+        tag3 = self.item.copy()
+        tag3['weight_score'] = np.zeros(len(self.item))
+        tag3['weight_score'] += np.where(self.item['answer_id'].isin(self.fquestion), 2, 0)
+        tag3['weight_score'] += np.where(self.item['doc_id'].isin(self.fcompany), 1, 0)
+        tag3 = tag3.sort_values(by = 'weight_score', ascending = False).iloc[:10]
+
         if self.answer != None:
             tag3 = content_based_filtering_cosine(np.array(tag3["answer_id"]), self.matrix[tag3["answer_id"]], self.answer,
                                    self.embedder, self.topk)
             return list(tag3)
         else:
-            result = list(tag3.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:30]
+            result = list(tag3.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:10]
             if len(result) >= self.topk:
                 return random.sample(result, self.topk)
             else:
