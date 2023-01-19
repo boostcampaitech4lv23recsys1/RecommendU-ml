@@ -36,28 +36,31 @@ def main(args):
         question_category = embedder.match_question_top1(question_category, question_emb_matrix)
         
 
-    with open(f"{args.data_dir}question_cate_map_answerid.json","r") as f: #key: question_category, value(list): answer_id
+    with open(os.path.join(args.data_dir, "question_cate_map_answerid.json"), 'r') as f: #key: question_category, value(list): answer_id
         qcate_dict = json.load(f)
+        
 
     
     f = open('sample_answer.txt', "r")
     sample_answer = f.read()
 
     # company o, answer o
-    example_user1 = {"question_category" : 6, "company": "롯데IT테크(주)", "favorite_company":"네이버(주)", "job_large":"IT·인터넷", "answer":sample_answer}
+    example_user1 = {"question_category" : 6, "company": "롯데IT테크(주)", "favorite_company":"네이버(주)", "job_small":"응용프로그래머", "answer":sample_answer}
     # company x, answer o
-    example_user2 = {"question_category" : 6, "company": "", "favorite_company":"네이버(주)", "job_large":"IT·인터넷", "answer":sample_answer}
+    example_user2 = {"question_category" : 6, "company": "", "favorite_company":"네이버(주)", "job_small":"응용프로그래머", "answer":sample_answer}
     # company o, answer x
-    example_user3 = {"question_category" : 6, "company": "롯데IT테크(주)", "favorite_company":"네이버(주)", "job_large":"IT·인터넷", "answer":""}
-    # company x, answer x
-    example_user4 = {"question_category" : 6, "company": "", "favorite_company":"네이버(주)", "job_large":"IT·인터넷", "answer":""}
-
+    example_user3 = {"question_category" : 6, "company": "롯데IT테크(주)", "favorite_company":"네이버(주)", "job_small":"응용프로그래머", "answer":""}
+    example_user4 = {"question_category" : 6, "company": "㈜KB데이타시스템", "favorite_company":"네이버(주)", "job_small":"경리·회계·결산", "answer":""}
+    example_user5 = {"question_category" : 10, "company": "(주)카카오", "favorite_company":"네이버(주)", "job_small":"경리·회계·결산", "answer":""}
     
     print("data loader time : ", time.time()-start1)
+    
+    print("[DEBUG]")
+    question_category, company, favorite_company, job_small, answer = example_user5.values()
 
     start2 = time.time()
     recommend = Recommendation(document, item, qcate_dict, answer_emb_matrix, embedder, 
-                                example_user1["question_category"], example_user1["company"], example_user1["favorite_company"], example_user1["job_large"], example_user1["answer"], 
+                                question_category, company, favorite_company, job_small, answer, 
                                 args.topk)
     
     recommend.filtering()

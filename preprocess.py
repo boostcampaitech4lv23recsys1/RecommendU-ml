@@ -9,11 +9,12 @@ from transformers import AutoTokenizer, AutoModel
 from sklearn.metrics.pairwise import cosine_similarity
 from similarity import content_based_filtering_cosine
 
+pd.set_option('display.max_columns', None)
 
 class FeatureExtractor:
     def __init__(self, model_name):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModel.from_pretrained(model_name)
+        self.model = AutoModel.from_pretrained(model_name).eval()
 
 
     def mean_pooling(self, model_output, attention_mask):
@@ -24,7 +25,7 @@ class FeatureExtractor:
     def match_question_top1(self, question_string, embedding_matrix) -> int:
         encoded_input = self.tokenizer(question_string, padding = True, truncation = True, return_tensors = 'pt')
         with torch.no_grad():
-            output = self.embedder.model(**encoded_input)
+            output = self.model(**encoded_input)
             embedding = self.mean_pooling(output, encoded_input['attention_mask'])
         similarity = cosine_similarity(embedding, embedding_matrix)[0]
         top1_idx = np.argsort(similarity)[::-1][0].item()
@@ -34,7 +35,7 @@ class FeatureExtractor:
 
 class Recommendation:
     def __init__(self, document, item, qcate_dict, matrix, embedder, question_category, company, 
-                 favorite_company, job_large, answer, topk):
+                 favorite_company, job_small, answer, topk):
         
         #data
         self.document = document
@@ -48,8 +49,8 @@ class Recommendation:
         #user information
         self.question_category = str(question_category)
         self.company = company if company else favorite_company
-        self.job_large = job_large
-        self.answer = answer if answer else None
+        self.job_small = job_small
+        self.answer = None if len(answer) == 0 else answer
         
         #setting
         self.topk = topk
@@ -59,10 +60,11 @@ class Recommendation:
         self.fcompany = None
         self.fjob = None
     
+
     def filtering(self):
         self.fquestion = self.qcate_dict[self.question_category] #질문 필터링
         self.fcompany = list(self.document[self.document["company"] == self.company]["doc_id"])
-        self.job_large = list(self.document[self.document["job_large"] == self.job_large]["doc_id"])
+        self.job_small = list(self.document[self.document["job_small"] == self.job_small]["doc_id"])
 
     
     def recommend_with_company_jobtype(self):
@@ -71,9 +73,11 @@ class Recommendation:
         """
         tag1 = self.item[(self.item["answer_id"].isin(self.fquestion)) 
                              & (self.item["doc_id"].isin(self.fcompany))
-                             & (self.item["doc_id"].isin(self.job_large))]
-
-        if self.answer:
+                             & (self.item["doc_id"].isin(self.job_small))]
+        # testing = pd.merge(tag1, self.document, how = 'left', on = 'doc_id')
+        # print(testing)
+        print(f"[TAG1 SHAPE]: {tag1.shape}")
+        if self.answer != None:
             tag1 = content_based_filtering_cosine(np.array(tag1["answer_id"]), self.matrix[tag1["answer_id"]], self.answer,
                                    self.embedder, self.topk)
             return list(tag1)
@@ -90,9 +94,10 @@ class Recommendation:
         Tag 2 : 질문 O / 회사 x / 직무 O
         """
         tag2 = self.item[(self.item["answer_id"].isin(self.fquestion)) 
-                             & (self.item["doc_id"].isin(self.job_large))]
+                             & (self.item["doc_id"].isin(self.job_small))]
         
-        if self.answer:
+        print(f"[TAG2 recommend_with_jobtype_without_company]: {tag2.shape}")
+        if self.answer != None:
             tag2 = content_based_filtering_cosine(np.array(tag2["answer_id"]), self.matrix[tag2["answer_id"]], self.answer,
                                    self.embedder, self.topk)
             return list(tag2)
@@ -111,8 +116,8 @@ class Recommendation:
         """
         tag3 = self.item[(self.item["answer_id"].isin(self.fquestion)) 
                              & (self.item["doc_id"].isin(self.fcompany))]
-        
-        if self.answer:
+        print(f"[TAG3 recommend_with_company_without_jobtype]: {tag3.shape}")
+        if self.answer != None:
             tag3 = content_based_filtering_cosine(np.array(tag3["answer_id"]), self.matrix[tag3["answer_id"]], self.answer,
                                    self.embedder, self.topk)
             return list(tag3)
