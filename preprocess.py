@@ -6,6 +6,7 @@ import torch
 
 from transformers import AutoTokenizer, AutoModel
 
+from sklearn.metrics.pairwise import cosine_similarity
 from similarity import content_based_filtering_cosine
 
 
@@ -20,6 +21,15 @@ class FeatureExtractor:
         input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
         return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
+    def match_question_top1(self, question_string, embedding_matrix) -> int:
+        encoded_input = self.tokenizer(question_string, padding = True, truncation = True, return_tensors = 'pt')
+        with torch.no_grad():
+            output = self.embedder.model(**encoded_input)
+            embedding = self.mean_pooling(output, encoded_input['attention_mask'])
+        similarity = cosine_similarity(embedding, embedding_matrix)[0]
+        top1_idx = np.argsort(similarity)[::-1][0].item()
+        
+        return top1_idx + 1
 
 
 class Recommendation:

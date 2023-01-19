@@ -8,6 +8,10 @@ import pandas as pd
 
 from preprocess import FeatureExtractor, Recommendation
 
+
+MODEL_NAME = "jhgan/ko-sroberta-multitask"
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
 
@@ -18,18 +22,23 @@ def parse_args():
 
 
 def main(args):
+    # Example
+    question_category = "입사 후 포부 : 입사 후 10년 동안의 회사생활 시나리오와 그것을 추구하는 이유를 기술해주세요."
     start1 = time.time()
 
     document = pd.read_csv(os.path.join(args.data_dir, "jk_documents_3_2.csv"), low_memory = False)
     item = pd.read_csv(os.path.join(args.data_dir, "jk_answers_without_samples_3_2.csv"), low_memory = False)
+    answer_emb_matrix = np.load(os.path.join(args.data_dir, "answer_embedding_matrix.npy"))
+    question_emb_matrix = np.load(os.path.join(args.data_dir, "question_embedding_matrix.npy"))
 
-    embedder = FeatureExtractor(model_name = "jhgan/ko-sroberta-multitask")
-
+    embedder = FeatureExtractor(model_name = MODEL_NAME)
+    if isinstance(question_category, str):
+        question_category = embedder.match_question_top1(question_category, question_emb_matrix)
+        
 
     with open(f"{args.data_dir}question_cate_map_answerid.json","r") as f: #key: question_category, value(list): answer_id
         qcate_dict = json.load(f)
 
-    answer_emb_matrix = np.load(f"{args.data_dir}answer_embedding_matrix.npy")
     
     f = open('sample_answer.txt', "r")
     sample_answer = f.read()
