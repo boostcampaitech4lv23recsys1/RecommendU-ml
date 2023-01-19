@@ -1,25 +1,30 @@
+import os
+import json
+import time
+import argparse
+
 import numpy as np
 import pandas as pd
-import argparse
-import json
-from collections import defaultdict
-import time
 
-from preprocess import FeatureExtractor
+from preprocess import FeatureExtractor, Recommendation
 
 def parse_args():
     parser = argparse.ArgumentParser(
 
     )
-    parser.add_argument("--data_dir", type=str, default = "/opt/ml/data/", help="crawled dataset")
+    parser.add_argument("--data_dir", type=str, default = "/opt/ml/data", help="crawled dataset")
     parser.add_argument("--topk", type=int, default = 4, help="recommend tag num")
     return parser.parse_args()   
 
 
 def main(args):
     start1 = time.time()
-    document = pd.read_csv(f"{args.data_dir}jk_documents_3_2.csv")
-    item = pd.read_csv(f"{args.data_dir}jk_answers_without_samples_3_2.csv")
+
+    document = pd.read_csv(os.path.join(args.data_dir, "jk_documents_3_2.csv"), low_memory = False)
+    item = pd.read_csv(os.path.join(args.data_dir, "jk_answers_without_samples_3_2.csv"), low_memory = False)
+
+    embedder = FeatureExtractor(model_name = "jhgan/ko-sroberta-multitask")
+
 
     with open(f"{args.data_dir}question_cate_map_answerid.json","r") as f: #key: question_category, value(list): answer_id
         qcate_dict = json.load(f)
@@ -42,12 +47,20 @@ def main(args):
     print("data loader time : ", time.time()-start1)
 
     start2 = time.time()
-    rectag = FeatureExtractor(document, item, qcate_dict, answer_emb_matrix, example_user1["question_category"], example_user1["company"], 
-                example_user1["favorite_company"], example_user1["job_large"], example_user1["answer"], args.topk)
+    recommend = Recommendation(document, item, qcate_dict, answer_emb_matrix, embedder, 
+                                example_user1["question_category"], example_user1["company"], example_user1["favorite_company"], example_user1["job_large"], example_user1["answer"], 
+                                args.topk)
     
-    rectag.filtering()
+    recommend.filtering()
 
-    result = {"tag1" : rectag.gettag1(),"tag2" : rectag.gettag2(),"tag3" : rectag.gettag3(),"tag4" : rectag.gettag4(),"tag5" : rectag.gettag5()}
+    result = {
+            "tag1" : recommend.recommend_with_company_jobtype(),
+            "tag2" : recommend.recommend_with_jobtype_without_company(),
+            "tag3" : recommend.recommend_with_company_without_jobtype(),
+            "tag4" : recommend.recommed_based_popularity(),
+            "tag5" : recommend.recommend_based_expert()
+            }
+
     print("=======태그별 추천 결과(answer_id)========")
     print(result)
     print("recommend time : ", time.time()-start2)

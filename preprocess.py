@@ -1,24 +1,39 @@
 import numpy as np
 import pandas as pd
 import random
+
+import torch
+
 from transformers import AutoTokenizer, AutoModel
 
-from similarity import content_based_filtering_euclidean
-
-class SimModel:
-    sim_model_name = "jhgan/ko-sroberta-multitask"
-    sim_tokenizer = AutoTokenizer.from_pretrained(sim_model_name)
-    sim_model = AutoModel.from_pretrained(sim_model_name)
+from similarity import content_based_filtering_cosine
 
 
-class FeatureExtractor(SimModel):
-    def __init__(self, document, item, qcate_dict, matrix, question_category, company, 
+class FeatureExtractor:
+    def __init__(self, model_name):
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModel.from_pretrained(model_name)
+
+
+    def mean_pooling(self, model_output, attention_mask):
+        token_embeddings = model_output[0] #First element of model_output contains all token embeddings
+        input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+        return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+
+
+
+class Recommendation:
+    def __init__(self, document, item, qcate_dict, matrix, embedder, question_category, company, 
                  favorite_company, job_large, answer, topk):
+        
         #data
         self.document = document
         self.item = item
         self.qcate_dict = qcate_dict
         self.matrix = matrix
+
+        # model
+        self.embedder = embedder
         
         #user information
         self.question_category = str(question_category)
@@ -39,15 +54,18 @@ class FeatureExtractor(SimModel):
         self.fcompany = list(self.document[self.document["company"] == self.company]["doc_id"])
         self.job_large = list(self.document[self.document["job_large"] == self.job_large]["doc_id"])
 
-    #Tag 1 : 질문 O / 회사 O / 직무 O
-    def gettag1(self):
+    
+    def recommend_with_company_jobtype(self):
+        """
+        Tag 1 : 질문 O / 회사 O / 직무 O
+        """
         tag1 = self.item[(self.item["answer_id"].isin(self.fquestion)) 
                              & (self.item["doc_id"].isin(self.fcompany))
                              & (self.item["doc_id"].isin(self.job_large))]
 
         if self.answer:
-            tag1 = content_based_filtering_euclidean(np.array(tag1["answer_id"]), self.matrix[tag1["answer_id"]], self.answer,
-                                   super().sim_tokenizer, super().sim_model, self.topk)
+            tag1 = content_based_filtering_cosine(np.array(tag1["answer_id"]), self.matrix[tag1["answer_id"]], self.answer,
+                                   self.embedder, self.topk)
             return list(tag1)
         else:
             temp = list(tag1.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:30]
@@ -56,14 +74,17 @@ class FeatureExtractor(SimModel):
             else:
                 return temp
     
-    #Tag 2 : 질문 O / 회사 x / 직무 O
-    def gettag2(self):
+
+    def recommend_with_jobtype_without_company(self):
+        """
+        Tag 2 : 질문 O / 회사 x / 직무 O
+        """
         tag2 = self.item[(self.item["answer_id"].isin(self.fquestion)) 
                              & (self.item["doc_id"].isin(self.job_large))]
         
         if self.answer:
-            tag2 = content_based_filtering_euclidean(np.array(tag2["answer_id"]), self.matrix[tag2["answer_id"]], self.answer,
-                                   super().sim_tokenizer, super().sim_model, self.topk)
+            tag2 = content_based_filtering_cosine(np.array(tag2["answer_id"]), self.matrix[tag2["answer_id"]], self.answer,
+                                   self.embedder, self.topk)
             return list(tag2)
         else:
             temp = list(tag2.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:30]
@@ -73,30 +94,39 @@ class FeatureExtractor(SimModel):
                 return temp
         
     
-    #Tag 3 : 질문 O / 회사 O / 직무 X
-    def gettag3(self):
+    
+    def recommend_with_company_without_jobtype(self):
+        """
+        Tag 3 : 질문 O / 회사 O / 직무 X
+        """
         tag3 = self.item[(self.item["answer_id"].isin(self.fquestion)) 
                              & (self.item["doc_id"].isin(self.fcompany))]
         
         if self.answer:
-            tag3 = content_based_filtering_euclidean(np.array(tag3["answer_id"]), self.matrix[tag3["answer_id"]], self.answer,
-                                   super().sim_tokenizer, super().sim_model, self.topk)
+            tag3 = content_based_filtering_cosine(np.array(tag3["answer_id"]), self.matrix[tag3["answer_id"]], self.answer,
+                                   self.embedder, self.topk)
             return list(tag3)
         else:
-            temp = list(tag3.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:30]
-            if len(temp) >= self.topk:
-                return random.sample(temp, self.topk)
+            result = list(tag3.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:30]
+            if len(result) >= self.topk:
+                return random.sample(result, self.topk)
             else:
-                return temp
+                return result
     
-    #Tag 4 : popularity
-    def gettag4(self):
+    
+    def recommed_based_popularity(self):
+        """
+        Tag 4 : popularity
+        """
         tag4 = self.item[self.item["answer_id"].isin(self.fquestion)].sort_values('doc_view',ascending=False)
                              
         return list(tag4["answer_id"])[:self.topk]
     
-    #Tag 5 : 전문가 평가
-    def gettag5(self):
+    
+    def recommend_based_expert(self):
+        """
+        Tag 5 : 전문가 평가
+        """
         tag5_good = self.item[self.item["answer_id"].isin(self.fquestion)].sort_values(by=['pro_good_cnt',"pro_bad_cnt"],ascending=[False,True])
         tag5_bad = self.item[self.item["answer_id"].isin(self.fquestion)].sort_values(by=['pro_bad_cnt',"pro_good_cnt"],ascending=[False,True])
         
