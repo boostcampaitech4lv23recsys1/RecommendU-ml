@@ -74,9 +74,6 @@ class Recommendation:
         """
         Tag 1 : 질문 O / 회사 O / 직무 O
         """
-        # tag1 = self.item[(self.item["answer_id"].isin(self.fquestion)) 
-        #                      & (self.item["doc_id"].isin(self.fcompany))
-        #                      & (self.item["doc_id"].isin(self.job_large))]
 
         tag1 = self.item.copy()
         tag1['weight_score'] = np.zeros(len(self.item))
@@ -84,18 +81,18 @@ class Recommendation:
         tag1['weight_score'] += np.where(self.item['doc_id'].isin(self.fcompany), 1, 0)
         tag1['weight_score'] += np.where(self.item['doc_id'].isin(self.job_large), 0.7, 0)
         tag1['weight_score'] += np.where(self.item['doc_id'].isin(self.job_small), 0.3, 0)
-        tag1 = tag1.sort_values(by = 'weight_score', ascending = False).iloc[:10]
     
         if self.answer != None:
+            tag1 = tag1.sort_values(by = 'weight_score', ascending = False).iloc[:10]
             tag1 = content_based_filtering_cosine(np.array(tag1["answer_id"]), self.matrix[tag1["answer_id"]], self.answer,
                                    self.embedder, self.topk)
             return list(tag1)
         else:
-            temp = list(tag1.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:10]
-            if len(temp) >= self.topk:
-                return random.sample(temp, self.topk)
+            tag1 = list(tag1.sort_values(by=["weight_score", "pro_good_cnt","doc_view"], ascending = [False, False, False])["answer_id"])[:10]
+            if len(tag1) >= self.topk:
+                return random.sample(tag1, self.topk)
             else:
-                return temp
+                return tag1
     
 
     def recommend_with_jobtype_without_company(self):
@@ -108,18 +105,20 @@ class Recommendation:
         tag2['weight_score'] += np.where(self.item['answer_id'].isin(self.fquestion), 2, 0)
         tag2['weight_score'] += np.where(self.item['doc_id'].isin(self.job_large), 1, 0)
         tag2['weight_score'] += np.where(self.item['doc_id'].isin(self.job_small), 0.3, 0)
-        tag2 = tag2.sort_values(by = 'weight_score', ascending = False).iloc[:10]
         
         if self.answer != None:
+            tag2 = tag2.sort_values(by = 'weight_score', ascending = False).iloc[:10]
             tag2 = content_based_filtering_cosine(np.array(tag2["answer_id"]), self.matrix[tag2["answer_id"]], self.answer,
                                    self.embedder, self.topk)
             return list(tag2)
+
+
         else:
-            temp = list(tag2.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:10]
-            if len(temp) >= self.topk:
-                return random.sample(temp, self.topk)
+            tag2 = list(tag2.sort_values(by=["weight_score", "pro_good_cnt","doc_view"], ascending = [False, False, False])["answer_id"])[:10]
+            if len(tag2) >= self.topk:
+                return random.sample(tag2, self.topk)
             else:
-                return temp
+                return tag2
         
     
     
@@ -131,25 +130,25 @@ class Recommendation:
         tag3['weight_score'] = np.zeros(len(self.item))
         tag3['weight_score'] += np.where(self.item['answer_id'].isin(self.fquestion), 1, 0)
         tag3['weight_score'] += np.where(self.item['doc_id'].isin(self.fcompany), 2, 0)
-        tag3 = tag3.sort_values(by = 'weight_score', ascending = False).iloc[:10]
 
         if self.answer != None:
+            tag3 = tag3.sort_values(by = 'weight_score', ascending = False).iloc[:10]
             tag3 = content_based_filtering_cosine(np.array(tag3["answer_id"]), self.matrix[tag3["answer_id"]], self.answer,
                                    self.embedder, self.topk)
             return list(tag3)
         else:
-            result = list(tag3.sort_values(by=["pro_good_cnt","doc_view"],ascending=[False,False])["answer_id"])[:10]
-            if len(result) >= self.topk:
-                return random.sample(result, self.topk)
+            tag3 = list(tag3.sort_values(by=["weight_score", "pro_good_cnt","doc_view"], ascending = [False, False, False])["answer_id"])[:10]
+            if len(tag3) >= self.topk:
+                return random.sample(tag3, self.topk)
             else:
-                return result
+                return tag3
     
     
     def recommed_based_popularity(self):
         """
         Tag 4 : popularity
         """
-        tag4 = self.item[self.item["answer_id"].isin(self.fquestion)].sort_values('doc_view',ascending=False)
+        tag4 = self.item[self.item["answer_id"].isin(self.fquestion)].sort_values('doc_view', ascending = False)
                              
         return list(tag4["answer_id"])[:self.topk]
     
@@ -158,8 +157,8 @@ class Recommendation:
         """
         Tag 5 : 전문가 평가
         """
-        tag5_good = self.item[self.item["answer_id"].isin(self.fquestion)].sort_values(by=['pro_good_cnt',"pro_bad_cnt"],ascending=[False,True])
-        tag5_bad = self.item[self.item["answer_id"].isin(self.fquestion)].sort_values(by=['pro_bad_cnt',"pro_good_cnt"],ascending=[False,True])
+        tag5_good = self.item[self.item["answer_id"].isin(self.fquestion)].sort_values(by=['pro_good_cnt',"pro_bad_cnt"], ascending = [False,True])
+        tag5_bad = self.item[self.item["answer_id"].isin(self.fquestion)].sort_values(by=['pro_bad_cnt',"pro_good_cnt"], ascending = [False,True])
         
         tag5_good = list(tag5_good["answer_id"])[:self.topk//2]
         tag5_bad = list(tag5_bad["answer_id"])[:self.topk//2]
