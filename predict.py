@@ -48,9 +48,8 @@ def main(args):
     example_user = {"question_category" : 5, "company": "(주)LG화학",\
          "favorite_company":"네이버(주)", "job_large": "연구개발·설계", "job_small":"반도체·디스플레이", "answer":"'공정개선경험과 전공지식'저는 공정엔지니어에게 필요한 것은 화학공정에 대한 지식과 그것을 바탕으로 생산량과 에너지 효율을 향상시킬 수 있는 능력이라고 생각합니다. 저는 화학공장 설계프로젝트에서 공정개선으로 생산량을 20%향상시킨 경험이 있습니다. 처음에는 원하는 만큼 생산량이 안 나왔지만 DMAIC기법을 사용하여 공정데이터를 분석하여고 메탄올이 낭비되고 있다는 것을 파악하였습니다. "}
 
-    print("data loader time : ", time.time()-start1)
+    print("data loader time : ", time.time() - start1)
     
-    print("[DEBUG]")
     question_category, company, favorite_company, job_large, job_small, answer = example_user.values()
 
     start2 = time.time()
@@ -69,22 +68,8 @@ def main(args):
             }
 
     print("=======태그별 추천 결과(answer_id)========")
-    print(f"[QUESTION CATEGORY]: {num2question[str(question_category)]}")
-    print(example_user)
     print(result)
     print("recommend time : ", time.time()-start2, '\n')
-    
-    for idx, recommend_tag in enumerate(result.keys()):
-        print(f"[TAG {idx + 1}]", '\n')
-        if idx == 3:
-            # TODO: list 2개 input
-            break
-        else:
-            for answer_id in result[recommend_tag]:
-                print(f"[QUESTION]: {item.iloc[answer_id]['question']}\n")
-                print(f"[ANSWER]: {item.iloc[answer_id]['answer']}\n")
-            print("-" * 250)
-            print('\n\n')
         
 
 

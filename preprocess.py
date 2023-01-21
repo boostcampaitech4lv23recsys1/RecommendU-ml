@@ -10,8 +10,6 @@ from transformers import AutoTokenizer, AutoModel
 from sklearn.metrics.pairwise import cosine_similarity
 from similarity import content_based_filtering_cosine
 
-pd.set_option('display.max_columns', None)
-
 class FeatureExtractor:
     def __init__(self, model_name):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -79,7 +77,7 @@ class Recommendation:
         high_score = scores[0]
         high_score_answers = [answer_id for answer_id, score in zip(answer_ids, scores) if score == high_score]
         residue = [answer_id for answer_id, score in zip(answer_ids, scores) if score != high_score]
-        
+
         if len(high_score_answers) >= self.topk:
             return random.sample(high_score_answers, self.topk)
         else:
