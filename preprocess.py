@@ -69,7 +69,24 @@ class Recommendation:
         self.job_large = list(self.document[self.document["job_large"] == self.job_large]["doc_id"])
         self.job_small = list(self.document[self.document["job_small"] == self.job_small]["doc_id"])
 
+
+    def _process_without_answer(self, tag):
+        result = tag.sort_values(by=["weight_score", "pro_good_cnt", "doc_view"], ascending = [False, False, False])[["answer_id", "weight_score"]]
+        answer_ids, scores = result['answer_id'], result['weight_score']
+        answer_ids = list(answer_ids)[:10]
+        scores = list(scores)[:10]
     
+        high_score = scores[0]
+        high_score_answers = [answer_id for answer_id, score in zip(answer_ids, scores) if score == high_score]
+        residue = [answer_id for answer_id, score in zip(answer_ids, scores) if score != high_score]
+        
+        if len(high_score_answers) >= self.topk:
+            return random.sample(high_score_answers, self.topk)
+        else:
+            result_ids = high_score_answers + random.sample(residue, self.topk - len(high_score_answers))
+            return result_ids
+    
+
     def recommend_with_company_jobtype(self):
         """
         Tag 1 : 질문 O / 회사 O / 직무 O
@@ -88,11 +105,7 @@ class Recommendation:
                                    self.embedder, self.topk)
             return list(tag1)
         else:
-            tag1 = list(tag1.sort_values(by=["weight_score", "pro_good_cnt","doc_view"], ascending = [False, False, False])["answer_id"])[:10]
-            if len(tag1) >= self.topk:
-                return random.sample(tag1, self.topk)
-            else:
-                return tag1
+            return self._process_without_answer(tag1)
     
 
     def recommend_with_jobtype_without_company(self):
@@ -112,13 +125,8 @@ class Recommendation:
                                    self.embedder, self.topk)
             return list(tag2)
 
-
         else:
-            tag2 = list(tag2.sort_values(by=["weight_score", "pro_good_cnt","doc_view"], ascending = [False, False, False])["answer_id"])[:10]
-            if len(tag2) >= self.topk:
-                return random.sample(tag2, self.topk)
-            else:
-                return tag2
+            return self._process_without_answer(tag2)
         
     
     
@@ -136,12 +144,9 @@ class Recommendation:
             tag3 = content_based_filtering_cosine(np.array(tag3["answer_id"]), self.matrix[tag3["answer_id"]], self.answer,
                                    self.embedder, self.topk)
             return list(tag3)
+        
         else:
-            tag3 = list(tag3.sort_values(by=["weight_score", "pro_good_cnt","doc_view"], ascending = [False, False, False])["answer_id"])[:10]
-            if len(tag3) >= self.topk:
-                return random.sample(tag3, self.topk)
-            else:
-                return tag3
+            return self._process_without_answer(tag3)
     
     
     def recommed_based_popularity(self):
