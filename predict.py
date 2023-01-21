@@ -45,25 +45,8 @@ def main(args):
     with open(os.path.join(args.data_dir, "question_cate_map_answerid.json"), 'r') as f: #key: question_category, value(list): answer_id
         qcate_dict = json.load(f)
         
-
-    
-    f = open('sample_answer.txt', "r")
-    sample_answer = f.read()
-
-    # company o, answer o
-    # example_user1 = {"question_category" : 6, "company": "교보생명", "favorite_company":"네이버(주)", "job_small":"응용프로그래머", "answer":sample_answer}
-    # # company x, answer o
-    # example_user2 = {"question_category" : 6, "company": "", "favorite_company":"네이버(주)", "job_small":"응용프로그래머", "answer":sample_answer}
-    # # company o, answer x
-    # example_user3 = {"question_category" : 6, "company": "롯데IT테크(주)", "favorite_company":"네이버(주)", "job_small":"응용프로그래머", "answer":""}
-    # example_user4 = {"question_category" : 6, "company": "㈜KB데이타시스템", "favorite_company":"네이버(주)", "job_small":"경리·회계·결산", "answer":""}
-    # example_user5 = {"question_category" : 10, "company": "(주)카카오", "favorite_company":"네이버(주)", "job_small":"경리·회계·결산", "answer":""}
-    # example_user6 = {"question_category" : 8, "company": "(주)카카오", "favorite_company":"네이버(주)", "job_small":"경리·회계·결산", "answer":""}
-    # # (학)연세대학교연세의료원
-    # example_user = {"question_category" : 18, "company": "SK하이닉스(주)", "favorite_company":"네이버(주)", "job_large":"IT·인터넷", 
-    # "answer":"최근 **전자 설명회를 통해 만나 뵈었던 VC사업본부 담당 리크루터께서는 **전자 VC사업본부는 최근 신설되었지만 기존부터 관련 연구가 진행되어 왔으며 회사가 가지고 있는 지능형 자동차 부품에 대한 기술경쟁력은 세계적 수준이라 하셨고 VC사업본부의 경쟁사는 국내의 자동차 부품업체가 아닌 보쉬와 컨티넨탈과 같은 세계적인 부품업체라는 점과 **그룹 계열사들이 가지고 있는 다양한 기술력을 통해 계열사의 협업을 바탕으로 성장 가능성 또한 무궁무진 하다는 이야기를 하셨습니다."}
-    example_user = {"question_category" : 6, "company": "(주)SPC클라우드",\
-         "favorite_company":"네이버(주)", "job_large": "IT·인터넷", "job_small":"시스템프로그래머", "answer":""}
+    example_user = {"question_category" : 5, "company": "(주)LG화학",\
+         "favorite_company":"네이버(주)", "job_large": "연구개발·설계", "job_small":"반도체·디스플레이", "answer":"'공정개선경험과 전공지식'저는 공정엔지니어에게 필요한 것은 화학공정에 대한 지식과 그것을 바탕으로 생산량과 에너지 효율을 향상시킬 수 있는 능력이라고 생각합니다. 저는 화학공장 설계프로젝트에서 공정개선으로 생산량을 20%향상시킨 경험이 있습니다. 처음에는 원하는 만큼 생산량이 안 나왔지만 DMAIC기법을 사용하여 공정데이터를 분석하여고 메탄올이 낭비되고 있다는 것을 파악하였습니다. "}
 
     print("data loader time : ", time.time()-start1)
     
@@ -86,11 +69,11 @@ def main(args):
             }
 
     print("=======태그별 추천 결과(answer_id)========")
+    print(f"[QUESTION CATEGORY]: {num2question[str(question_category)]}")
     print(example_user)
     print(result)
     print("recommend time : ", time.time()-start2, '\n')
     
-    print(f"[QUESTION CATEGORY]: {num2question[str(question_category)]}")
     for idx, recommend_tag in enumerate(result.keys()):
         print(f"[TAG {idx + 1}]", '\n')
         if idx == 3:
