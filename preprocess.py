@@ -36,7 +36,7 @@ class FeatureExtractor:
 
 class Recommendation:
     def __init__(self, document, item, qcate_dict, matrix, embedder, question_category, company, 
-                 favorite_company, job_large, answer, topk):
+                 favorite_company, job_large, job_small, answer, topk):
         
         #data
         self.document = document
@@ -51,6 +51,7 @@ class Recommendation:
         self.question_category = str(question_category)
         self.company = company if company else favorite_company
         self.job_large = job_large
+        self.job_small = job_small
         self.answer = None if len(answer) == 0 else answer
         
         #setting
@@ -66,6 +67,7 @@ class Recommendation:
         self.fquestion = self.qcate_dict[self.question_category] #질문 필터링
         self.fcompany = list(self.document[self.document["company"] == self.company]["doc_id"])
         self.job_large = list(self.document[self.document["job_large"] == self.job_large]["doc_id"])
+        self.job_small = list(self.document[self.document["job_small"] == self.job_small]["doc_id"])
 
     
     def recommend_with_company_jobtype(self):
@@ -80,7 +82,8 @@ class Recommendation:
         tag1['weight_score'] = np.zeros(len(self.item))
         tag1['weight_score'] += np.where(self.item['answer_id'].isin(self.fquestion), 2, 0)
         tag1['weight_score'] += np.where(self.item['doc_id'].isin(self.fcompany), 1, 0)
-        tag1['weight_score'] += np.where(self.item['doc_id'].isin(self.job_large), 1, 0)
+        tag1['weight_score'] += np.where(self.item['doc_id'].isin(self.job_large), 0.7, 0)
+        tag1['weight_score'] += np.where(self.item['doc_id'].isin(self.job_small), 0.3, 0)
         tag1 = tag1.sort_values(by = 'weight_score', ascending = False).iloc[:10]
     
         if self.answer != None:
@@ -104,6 +107,7 @@ class Recommendation:
         tag2['weight_score'] = np.zeros(len(self.item))
         tag2['weight_score'] += np.where(self.item['answer_id'].isin(self.fquestion), 2, 0)
         tag2['weight_score'] += np.where(self.item['doc_id'].isin(self.job_large), 1, 0)
+        tag2['weight_score'] += np.where(self.item['doc_id'].isin(self.job_small), 0.3, 0)
         tag2 = tag2.sort_values(by = 'weight_score', ascending = False).iloc[:10]
         
         if self.answer != None:
@@ -125,8 +129,8 @@ class Recommendation:
         """
         tag3 = self.item.copy()
         tag3['weight_score'] = np.zeros(len(self.item))
-        tag3['weight_score'] += np.where(self.item['answer_id'].isin(self.fquestion), 2, 0)
-        tag3['weight_score'] += np.where(self.item['doc_id'].isin(self.fcompany), 1, 0)
+        tag3['weight_score'] += np.where(self.item['answer_id'].isin(self.fquestion), 1, 0)
+        tag3['weight_score'] += np.where(self.item['doc_id'].isin(self.fcompany), 2, 0)
         tag3 = tag3.sort_values(by = 'weight_score', ascending = False).iloc[:10]
 
         if self.answer != None:
