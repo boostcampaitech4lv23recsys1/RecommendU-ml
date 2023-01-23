@@ -23,8 +23,9 @@ def parse_args():
 
 def main(args):
     # Example
-    question_category = "입사 후 포부 : 입사 후 10년 동안의 회사생활 시나리오와 그것을 추구하는 이유를 기술해주세요."
+    input_question = "입사 후 포부 : 입사 후 10년 동안의 회사생활 시나리오와 그것을 추구하는 이유를 기술해주세요."
     start1 = time.time()
+    sim = None
 
     document = pd.read_csv(os.path.join(args.data_dir, "jk_documents_3_2.csv"), low_memory = False)
     item = pd.read_csv(os.path.join(args.data_dir, "jk_answers_without_samples_3_2.csv"), low_memory = False)
@@ -39,8 +40,12 @@ def main(args):
 
     embedder = FeatureExtractor(model_name = MODEL_NAME)
     if isinstance(question_category, str):
-        question_category = embedder.match_question_top1(question_category, question_emb_matrix)
-        
+        question_category, sim = embedder.match_question_top1(input_question, question_emb_matrix)
+    
+    """
+    if sim is not None and sim ~~ < XX:
+        return
+    """
 
     with open(os.path.join(args.data_dir, "question_cate_map_answerid.json"), 'r') as f: #key: question_category, value(list): answer_id
         qcate_dict = json.load(f)

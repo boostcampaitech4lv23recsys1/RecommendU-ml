@@ -28,8 +28,9 @@ class FeatureExtractor:
             embedding = self.mean_pooling(output, encoded_input['attention_mask'])
         similarity = cosine_similarity(embedding, embedding_matrix)[0]
         top1_idx = np.argsort(similarity)[::-1][0].item()
+        top1_sim = np.sort(similarity)[::-1][0].item()
         
-        return top1_idx + 1
+        return top1_idx + 1, top1_sim
 
 
 class Recommendation:
