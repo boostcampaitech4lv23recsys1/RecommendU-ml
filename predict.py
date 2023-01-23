@@ -23,9 +23,10 @@ def parse_args():
 
 def main(args):
     # Example
+    input_question = None
+    sim = None
     input_question = "입사 후 포부 : 입사 후 10년 동안의 회사생활 시나리오와 그것을 추구하는 이유를 기술해주세요."
     start1 = time.time()
-    sim = None
 
     document = pd.read_csv(os.path.join(args.data_dir, "jk_documents_3_2.csv"), low_memory = False)
     item = pd.read_csv(os.path.join(args.data_dir, "jk_answers_without_samples_3_2.csv"), low_memory = False)
@@ -39,7 +40,7 @@ def main(args):
         num2question = json.load(f)
 
     embedder = FeatureExtractor(model_name = MODEL_NAME)
-    if isinstance(question_category, str):
+    if isinstance(input_question, str):
         question_category, sim = embedder.match_question_top1(input_question, question_emb_matrix)
     
     """
