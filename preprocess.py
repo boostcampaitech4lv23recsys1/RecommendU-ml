@@ -35,7 +35,7 @@ class FeatureExtractor:
 
 class Recommendation:
     def __init__(self, document, item, qcate_dict, matrix, embedder, question_category, company, 
-                 favorite_company, job_large, job_small, answer, topk):
+                 job_large, job_small, answer, topk):
         
         #data
         self.document = document
@@ -48,7 +48,7 @@ class Recommendation:
         
         #user information
         self.question_category = str(question_category)
-        self.company = company if company else favorite_company
+        self.company = company
         self.job_large = job_large
         self.job_small = job_small
         self.answer = None if len(answer) == 0 else answer
