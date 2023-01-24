@@ -45,11 +45,6 @@ def main(args):
         if len(WHITESPACE_HANDLER(input_question)) == 0 or sim <= 0.5:
             raise Exception("Unexpected question input")
         
-    """
-    if sim is not None and sim ~~ < XX:
-        return
-    """
-        
     example_user = {"question_category" : 5, "company": "(주)LG화학",\
           "job_large": "연구개발·설계", "job_small":"반도체·디스플레이", "answer":"'공정개선경험과 전공지식'저는 공정엔지니어에게 필요한 것은 화학공정에 대한 지식과 그것을 바탕으로 생산량과 에너지 효율을 향상시킬 수 있는 능력이라고 생각합니다. 저는 화학공장 설계프로젝트에서 공정개선으로 생산량을 20%향상시킨 경험이 있습니다. 처음에는 원하는 만큼 생산량이 안 나왔지만 DMAIC기법을 사용하여 공정데이터를 분석하여고 메탄올이 낭비되고 있다는 것을 파악하였습니다. "}
 
