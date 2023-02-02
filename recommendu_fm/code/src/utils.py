@@ -25,14 +25,14 @@ class EarlyStopping:
         self.counter = 0
         self.best_score = None
         self.early_stop = False
-        self.val_loss_min = np.Inf
+        self.val_auc_max = -np.Inf
         self.delta = delta
 
-    def __call__(self, val_loss, model):
-        score = -val_loss
+    def __call__(self, val_auc, model):
+        score = val_auc
         if self.best_score is None:
             self.best_score = score
-            self.save_checkpoint(val_loss, model)
+            self.save_checkpoint(val_auc, model)
         elif score < self.best_score + self.delta:
             self.counter += 1
             print(f"EarlyStopping counter: {self.counter} out of {self.patience}")
@@ -40,13 +40,13 @@ class EarlyStopping:
                 self.early_stop = True
         else:
             self.best_score = score
-            self.save_checkpoint(val_loss, model)
+            self.save_checkpoint(val_auc, model)
             self.counter = 0
 
-    def save_checkpoint(self, val_loss, model):
+    def save_checkpoint(self, val_auc, model):
         if self.verbose:
             print(
-                f"Validation rmse decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ..."
+                f"Validation AUC increased ({self.val_auc_max:.6f} --> {val_auc:.6f}).  Saving model ..."
             )
         ppath = Path(
             os.path.join(
@@ -60,4 +60,4 @@ class EarlyStopping:
 
         ppath.parent.mkdir(parents=True, exist_ok=True)
         torch.save(model.state_dict(), str(ppath))
-        self.val_loss_min = val_loss
+        self.val_auc_max = val_auc

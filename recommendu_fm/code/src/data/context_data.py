@@ -72,7 +72,7 @@ class Preprocessor():
         print("starting to load train data: ")
         train_data = pd.read_csv(self.train_data_path)
         train_data = train_data.loc[train_data['user'] != 1].reset_index(drop = True)
-        
+
         print("train data shape: ")
         print(train_data.shape)
 
@@ -105,6 +105,11 @@ class Preprocessor():
         train_data['doc_view'] = train_data['doc_view'].map(view2categ)
         train_data['answer_pro_good_cnt'] = train_data['answer_pro_good_cnt'].map(good2categ)
         train_data['answer_pro_bad_cnt'] = train_data['answer_pro_bad_cnt'].map(good2categ)
+
+        train_data['coin_company'] = train_data['coin_company'].astype('int')
+        train_data['coin_jobsmall'] = train_data['coin_jobsmall'].astype('int')
+        train_data['coin_question_type'] = train_data['coin_question_type'].astype('int')
+
 
         train_data = train_data[['answer', 'rectype', 'document', 'coin_company', \
                                 'coin_jobsmall', 'coin_question_type', 'answer_pro_good_cnt',
@@ -142,16 +147,21 @@ def context_data_split(args, data):
     return data
 
 def context_data_loader(args, data):
-    train_dataset = TensorDataset(torch.LongTensor(data['X_train'].values), torch.LongTensor(data['y_train'].values))
-    valid_dataset = TensorDataset(torch.LongTensor(data['X_valid'].values), torch.LongTensor(data['y_valid'].values))
-    # test_dataset = TensorDataset(torch.LongTensor(data['test'].values))
+    if args.MODEL == 'CatBoost':
+        data['train_dataloader'], data['valid_dataloader'] = \
+            (data['X_train'], data['y_train']), (data['X_valid'], data['y_valid'])
+        data['cat_features'] = list(data['X_train'].columns)
+        print(data['cat_features'])
+    else:
+        train_dataset = TensorDataset(torch.LongTensor(data['X_train'].values), torch.LongTensor(data['y_train'].values))
+        valid_dataset = TensorDataset(torch.LongTensor(data['X_valid'].values), torch.LongTensor(data['y_valid'].values))
+        # test_dataset = TensorDataset(torch.LongTensor(data['test'].values))
 
 
-    train_dataloader = DataLoader(train_dataset, batch_size=args.BATCH_SIZE, shuffle=args.DATA_SHUFFLE)
-    valid_dataloader = DataLoader(valid_dataset, batch_size=args.BATCH_SIZE, shuffle=args.DATA_SHUFFLE)
-    # test_dataloader = DataLoader(test_dataset, batch_size=args.BATCH_SIZE, shuffle=False)
+        train_dataloader = DataLoader(train_dataset, batch_size=args.BATCH_SIZE, shuffle=args.DATA_SHUFFLE)
+        valid_dataloader = DataLoader(valid_dataset, batch_size=args.BATCH_SIZE, shuffle=args.DATA_SHUFFLE)
+        # test_dataloader = DataLoader(test_dataset, batch_size=args.BATCH_SIZE, shuffle=False)
 
-    data['train_dataloader'], data['valid_dataloader']= train_dataloader, valid_dataloader
-    # data['test_dataloader'] = test_dataloader
+        data['train_dataloader'], data['valid_dataloader']= train_dataloader, valid_dataloader
 
     return data
