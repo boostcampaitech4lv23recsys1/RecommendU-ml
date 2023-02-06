@@ -55,16 +55,15 @@ def bad2categ(x):
         return 2
     else:
         return 3
+    
+def make_label(thing):
+    return str(int(thing[1:]))
 
 class Preprocessor():
     def __init__(self, args):
         self.args = args
         self.train_data_path = os.path.join(self.args.DATA_PATH, "fm_ver2.csv")
-        
-        self.answer2idx = LabelEncoder()
-        self.joblarge2idx = LabelEncoder()
-        self.major2idx = LabelEncoder()
-        self.document2idx = LabelEncoder()
+    
 
         # self.doc_rating_normalizer = StandardScaler()
 
@@ -77,20 +76,6 @@ class Preprocessor():
         print("train data shape: ")
         print(train_data.shape)
 
-        answer_df = pd.read_csv(self.args.DATA_PATH + 'services_answer.tsv', sep = '\t')
-        joblarge_df = pd.read_csv(self.args.DATA_PATH + 'services_joblarge.csv')
-        major_df = pd.read_csv(self.args.DATA_PATH + 'services_majorsmall.csv')
-        document_df = pd.read_csv(self.args.DATA_PATH + 'services_document.csv')
-
-        answers = answer_df['answer_id'].unique()
-        joblarges = joblarge_df['job_large_id'].unique()
-        majors = major_df['major_small_id'].unique()
-        documents = document_df['document_id'].unique()
-        
-        self.answer2idx.fit(answers)
-        self.joblarge2idx.fit(joblarges)
-        self.major2idx.fit(majors)
-        self.document2idx.fit(documents)
 
         #원래대로라면 trainset과 valid를 나눈 후에 train에만 build하고 valid set에 normalize를 해야함.
         #아 rating -1때문에 쓰기가 어렵구나
@@ -101,10 +86,10 @@ class Preprocessor():
         print("load train data to preprocess...")
         train_data = self._load_train_dataset()
 
-        train_data['answer'] = self.answer2idx.transform(train_data['answer'])
-        train_data['user_job_large'] = self.joblarge2idx.transform(train_data['user_job_large'])
-        train_data['user_major_small'] = self.major2idx.transform(train_data['user_major_small'])
-        train_data['document'] = self.document2idx.transform(train_data['document'])
+        train_data['answer'] = train_data['answer'].astype('str').apply(make_label)
+        train_data['user_job_large'] = train_data['user_job_large'].astype('str').apply(make_label)
+        train_data['user_major_small'] = train_data['user_major_small'].astype('str').apply(make_label)
+        train_data['document'] = train_data['document'].astype('str').apply(make_label)
 
         train_data['doc_view'] = train_data['doc_view'].map(view2categ)
         train_data['answer_pro_good_cnt'] = train_data['answer_pro_good_cnt'].map(good2categ)
@@ -119,15 +104,15 @@ class Preprocessor():
                                 'coin_jobsmall', 'coin_question_type', 'answer_pro_good_cnt',
                                 'answer_pro_bad_cnt', 'doc_view', 'label'
                             ]]
-
-        print(len(self.answer2idx.classes_))
-        #TODO: user job large, user_major_small
-        field_dims = np.array([len(self.joblarge2idx.classes_), len(self.major2idx.classes_), len(self.answer2idx.classes_),
-                                    len(self.document2idx.classes_), 2, 2, 2, 4, 4, 4], dtype=np.uint32)
+        
+        # FM 
+        # #TODO: user job large, user_major_small
+        # field_dims = np.array([len(self.joblarge2idx.classes_), len(self.major2idx.classes_), len(self.answer2idx.classes_),
+        #                             len(self.document2idx.classes_), 2, 2, 2, 4, 4, 4], dtype=np.uint32)
         
         data = {
             'train': train_data,
-            'field_dims':field_dims
+            # 'field_dims':field_dims
             }
 
         return data
