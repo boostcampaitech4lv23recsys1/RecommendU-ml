@@ -1,91 +1,45 @@
-import pymysql
-import ast
+import requests
 import pandas as pd
+import json
 
-
-def get_api():
-    conn = pymysql.connect(
-        user='root', 
-        passwd='recsys6', 
-        host='34.64.237.2', 
-        db='recommendu', 
-        charset='utf8'
-    )    
+def load_job():
+    response = requests.get("http://www.recommendu.kro.kr:30001/services/job_total")
+    content = json.loads(response.text)
+    result = pd.DataFrame(content)
+    return result
     
-    return conn
+def load_answer():
+    response = requests.get("http://www.recommendu.kro.kr:30001/services/answer_total")
+    content = json.loads(response.text)
+    result = pd.DataFrame(content)
+    return result
 
-#### service data ####
-def get_joblargs_api(conn):
-    query = 'SELECT * FROM services_joblarge'
-    joblarge = pd.read_sql_query(query, conn)
+def load_document():
+    response = requests.get("http://www.recommendu.kro.kr:30001/services/document_total")
+    content = json.loads(response.text)
+    result = pd.DataFrame(content)
+    return result
 
-    return joblarge
+def load_user():
+    response = requests.get("http://www.recommendu.kro.kr:30001/services/accounts/total")
+    content = json.loads(response.text)
+    result = pd.DataFrame(content)
+    return result
 
-def get_jobsmall_api(conn):
-    query = 'SELECT * FROM services_jobsmall'
-    jobsmall = pd.read_sql_query(query, conn)
+def load_answerlog():
+    response = requests.get("http://www.recommendu.kro.kr:30001/logs/total/answerlog")
+    content = json.loads(response.text)
+    result = pd.DataFrame(content)
+    return result
+    
+def load_evallog():
+    response = requests.get("http://www.recommendu.kro.kr:30001/logs/total/evallog")
+    content = json.loads(response.text)
+    result = pd.DataFrame(content)
+    return result
 
-    return jobsmall
-
-def get_majorsmall_api(conn):
-    query = 'SELECT * FROM services_majorsmall'
-    majorsmall = pd.read_sql_query(query, conn)
-
-    return majorsmall
-
-def get_majorsmall_api(conn):
-    query = 'SELECT * FROM services_company'
-    company = pd.read_sql_query(query, conn)
-
-    return company
-
-def get_majorsmall_api(conn):
-    query = 'SELECT * FROM services_questiontype'
-    question = pd.read_sql_query(query, conn)
-
-    return question
-
-def get_majorsmall_api(conn):
-    query = 'SELECT * FROM services_recommendtype'
-    rectype = pd.read_sql_query(query, conn)
-
-    return rectype
-
-def get_document_api(conn):
-    query = 'SELECT * FROM services_document'
-    documents = pd.read_sql_query(query, conn)
-
-    return documents
-
-def get_answer_question_types_api(conn):
-    query = 'SELECT * FROM services_answer_question_types'
-    answer_question_types = pd.read_sql_query(query, conn)
-
-    return answer_question_types
-
-def get_services_answer_api(conn):
-    query = 'SELECT * FROM services_answer'
-    answers = pd.read_sql_query(query, conn)
-
-    return answers
-
-#### user data ####
-
-def get_user_data_api(conn):
-    query = 'SELECT * FROM accounts_user'
-    user_data = pd.read_sql_query(query, conn)
-
-    return user_data
-
-### log data ###
-def get_answerlogs_api(conn):
-    query = 'SELECT * FROM logs_answerlog'
-    answerlogs = pd.read_sql_query(query, conn)
-
-    return answerlogs
-
-def get_reclogs_api(conn):
-    query = 'SELECT * FROM logs_recommendlog'
-    reclogs = pd.read_sql_query(query, conn) 
-
-    return reclogs   
+def load_recommendlog():
+    response = requests.get("http://www.recommendu.kro.kr:30001/logs/total/recommendlog")
+    content = json.loads(response.text)
+    result = pd.DataFrame(content)
+    return result
