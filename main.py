@@ -10,16 +10,17 @@ import time
 
 def main():
     start = time.time()
-    conn = get_api()
 
-    log_use_features = ['rec_timestamp', 'answer_id', 'rectype_id',
-        'user_id', 'label', 'rec_log_id', 'question_from_user',
-        'company_id', 'job_small_id', 'question_type_id']
+    ### reclog, answerlog 에서 사용할 feature ### 
+    log_use_features = ['rec_timestamp', 'answer', 'rectype',
+        'user', 'label', 'rec_log_id', 'question_from_user',
+        'company', 'job_small', 'question_type']
 
-    preprocess = Preprocess(log_use_features, conn)
+    preprocess = Preprocess(log_use_features)
 
+    
     #### 답변 클릭 로그 기준으로 추천 버튼 클릭 로그 가져오기 ####
-    fe_concat = preprocess.map_answerlog_last_reclog(get_answerlogs_api(conn), get_reclogs_api(conn))
+    fe_concat = preprocess.map_answerlog_last_reclog(load_answerlog(), load_recommendlog())
 
     #### 노출된 데이터 항목을 활용하여 positive: 1, negative:0 label 생성 #### 
     preprocess.make_negative_answerlog(fe_concat)

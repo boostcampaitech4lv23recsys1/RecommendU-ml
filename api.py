@@ -21,7 +21,7 @@ def load_document():
     return result
 
 def load_user():
-    response = requests.get("http://www.recommendu.kro.kr:30001/services/accounts/total")
+    response = requests.get("http://www.recommendu.kro.kr:30001/accounts/total")
     content = json.loads(response.text)
     result = pd.DataFrame(content)
     return result
