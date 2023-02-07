@@ -64,7 +64,7 @@ class EarlyStopping:
         self.val_auc_max = val_auc
         
 def send_model(from_path,to_path,model):
-    files=open(from_path,'r',encoding='ISO-8859-1')
+    files=open(from_path,'rb')
     obj={'model':model}
     upload = {'file':files}
     res = requests.post(to_path, files = upload,data=obj)
