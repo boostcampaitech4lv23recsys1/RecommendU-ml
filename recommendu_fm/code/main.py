@@ -2,12 +2,15 @@ import time
 import argparse
 import numpy as np
 import pandas as pd
+import requests
 
 from src import seed_everything
 from src.data.context_data import Preprocessor, context_data_loader
 # from src.data import context_data_load, context_data_split, context_data_loader
 from src import FactorizationMachineModel, CatBoostModel
 from sklearn.model_selection import StratifiedKFold
+from catboost import CatBoostClassifier
+from src.utils import send_model
 
 def main(args):
     seed_everything(args.SEED)
@@ -45,7 +48,11 @@ def main(args):
         auc_scores = np.append(auc_scores, auc_score)
         
         print(f"[FINAL AUC SCORES MEAN]: {auc_scores.mean()}")
-
+    print('-----------------Complete Train----------------')
+    result_path = args.SAVE_PATH+args.MODEL+"/fold1/checkpoint.cbm"
+    send_url = 'http://www.recommendu.kro.kr:30001/services/save_model/'
+    send_model(result_path,send_url,args.MODEL)
+    print('-----------------Complete Send----------------')
 
 
 if __name__ == "__main__":
@@ -56,7 +63,7 @@ if __name__ == "__main__":
 
     ############### BASIC OPTION
     arg('--DATA_PATH', type=str, default='../data/', help='Data path를 설정할 수 있습니다.')
-    arg('--SAVE_PATH', type = str, default = "/opt/ml/output/")
+    arg('--SAVE_PATH', type = str, default = "/opt/ml/RecommendU-ml/model_output/")
     arg('--MODEL', type=str, choices=['FM', 'CatBoost'],
                                 help='학습 및 예측할 모델을 선택할 수 있습니다.')
     arg('--DATA_SHUFFLE', type=bool, default=True, help='데이터 셔플 여부를 조정할 수 있습니다.')

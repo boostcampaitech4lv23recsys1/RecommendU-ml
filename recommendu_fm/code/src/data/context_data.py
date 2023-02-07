@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader, Dataset
 from sklearn.preprocessing import LabelEncoder
+from preprocess.main import preprocess_main
 
 
 class StandardScaler:
@@ -70,7 +71,7 @@ class Preprocessor():
 
     def _load_train_dataset(self, train_data_path = None):
         print("starting to load train data: ")
-        train_data = pd.read_csv(self.train_data_path)
+        train_data = preprocess_main()
         train_data = train_data.loc[train_data['user'] != 1].reset_index(drop = True)
 
         print("train data shape: ")

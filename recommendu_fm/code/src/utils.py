@@ -2,6 +2,7 @@ import os
 import random
 import numpy as np
 import torch
+import requests
 from sklearn.model_selection import train_test_split
 from pathlib import Path
 
@@ -61,3 +62,9 @@ class EarlyStopping:
         ppath.parent.mkdir(parents=True, exist_ok=True)
         torch.save(model.state_dict(), str(ppath))
         self.val_auc_max = val_auc
+        
+def send_model(from_path,to_path,model):
+    files=open(from_path,'r',encoding='ISO-8859-1')
+    obj={'model':model}
+    upload = {'file':files}
+    res = requests.post(to_path, files = upload,data=obj)

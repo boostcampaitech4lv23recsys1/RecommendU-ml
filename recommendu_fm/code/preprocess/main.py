@@ -1,14 +1,13 @@
 import numpy as np
 import pandas as pd
-import pymysql
 import ast
 from tqdm import tqdm
-from api import *
-from fm_preprocess import *
+from preprocess.api import *
+from preprocess.fm_preprocess import *
 import time
 
 
-def main():
+def preprocess_main():
     start = time.time()
 
     ### reclog, answerlog 에서 사용할 feature ### 
@@ -35,11 +34,10 @@ def main():
     ### get fe data ###
     fe_data = preprocess.get_fe_data()
 
-    print(fe_data.head())
-    print(fe_data.shape)
-    print(fe_data.columns)
+    print("---------------------Complete Preprocessing---------------------")
     print("total time : ", time.time() - start)
+    return fe_data
 
 
 if __name__ == '__main__':
-    main()
+    preprocess_main()
