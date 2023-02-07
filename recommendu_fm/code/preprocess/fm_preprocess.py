@@ -1,10 +1,9 @@
 import numpy as np
 import pandas as pd
-import pymysql
 import ast
 from tqdm import tqdm
 import time
-import api
+from preprocess import api
 
 class Preprocess():
     def __init__(self, log_use_features):
