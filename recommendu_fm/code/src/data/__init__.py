@@ -1,1 +1,0 @@
-from .context_data import context_data_split, context_data_loader
