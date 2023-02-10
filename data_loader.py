@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader, Dataset
 from sklearn.preprocessing import LabelEncoder
-from preprocess.main import preprocess_main
+from preprocessor import preprocess_main
 
 
 class StandardScaler:

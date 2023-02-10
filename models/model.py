@@ -13,7 +13,7 @@ import seaborn as sns
 
 from ._models import _FactorizationMachineModel
 from catboost import CatBoostClassifier
-from src.utils import EarlyStopping
+from utils import EarlyStopping
 
 class FactorizationMachineModel:
 

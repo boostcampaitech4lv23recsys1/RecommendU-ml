@@ -3,7 +3,7 @@ import pandas as pd
 import ast
 from tqdm import tqdm
 import time
-from preprocess import api
+import api
 
 class Preprocess():
     def __init__(self, log_use_features):

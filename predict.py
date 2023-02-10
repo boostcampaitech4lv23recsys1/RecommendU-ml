@@ -7,7 +7,7 @@ import argparse
 import numpy as np
 import pandas as pd
 
-from preprocess import FeatureExtractor, Recommendation
+from rule_based import FeatureExtractor, Recommendation
 
 
 MODEL_NAME = "jhgan/ko-sroberta-multitask"

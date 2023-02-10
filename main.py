@@ -2,15 +2,13 @@ import time
 import argparse
 import numpy as np
 import pandas as pd
-import requests
 
-from src import seed_everything
-from src.data.context_data import Preprocessor, context_data_loader
+from utils import seed_everything,send_model
+from data_loader import Preprocessor, context_data_loader
 # from src.data import context_data_load, context_data_split, context_data_loader
-from src import FactorizationMachineModel, CatBoostModel
+from models.model import FactorizationMachineModel, CatBoostModel
 from sklearn.model_selection import StratifiedKFold
 from catboost import CatBoostClassifier
-from src.utils import send_model
 
 def main(args):
     seed_everything(args.SEED)

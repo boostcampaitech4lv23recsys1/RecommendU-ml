@@ -1,5 +1,5 @@
 __pycache__
 .git
-recommendu_fm/code/catboost_info/
-model_output
+catboost_info
+# model_output
 .DS_Store
